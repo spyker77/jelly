@@ -1,0 +1,54 @@
+[tool.black]
+line-length = 119
+
+[tool.isort]
+line_length = 119
+profile = "black"
+
+[tool.mypy]
+plugins = ["strawberry.ext.mypy_plugin"]
+
+[tool.ruff]
+line-length = 119
+target-version = "py311"
+
+[tool.coverage]
+[tool.coverage.run]
+omit = ["tests/*", "*conftest.py"]
+
+[tool.pytest.ini_options]
+addopts = "--cov-report term-missing --strict-markers"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+
+[tool.poetry]
+name = "jelly"
+version = "0.1.0"
+description = "A playground for FastAPI, GraphQL and Elasticsearch"
+license = "MIT"
+authors = ["Evgeni Sautin <evgeni.sautin@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.*"
+fastapi = "0.93.0"
+gunicorn = "20.1.0"
+uvicorn = { extras = ["standard"], version = "0.20.0" }
+strawberry-graphql = { extras = ["fastapi"], version = "0.159.1" }
+elasticsearch-dsl = "7.4.1"
+aiohttp = "3.8.4"
+
+[tool.poetry.group.dev.dependencies]
+black = "23.1.0"
+isort = "5.12.0"
+flake8 = "6.0.0"
+mypy = "1.1.1"
+ruff = "0.0.254"
+pre-commit = "3.1.1"
+pytest = "7.2.2"
+pytest-asyncio = "0.20.3"
+pytest-cov = "4.0.0"
+pytest-xdist = {extras = ["psutil"], version = "3.2.0"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
