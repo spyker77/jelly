@@ -1,8 +1,9 @@
 import strawberry
-from elasticsearch_dsl import Search
+from elasticsearch_dsl import Q
 
 from app.documents.creator import Creator
-from app.schemas import AssetSchema, CreatorSchema
+from app.schemas.asset import AssetSchema
+from app.schemas.creator import CreatorSchema
 
 
 @strawberry.type
@@ -16,6 +17,7 @@ class Mutation:
             addCreator(username: "CoolUser", email: "cool@email.com") {
                 username
                 email
+                signedUp
                 assets {
                     type
                 }
@@ -30,9 +32,21 @@ class Mutation:
         Returns:
             CreatorSchema: Data about the creator and related assets.
         """
+        query = Q("bool", must=[Q("match", username=username), Q("match", email=email)])
+        response = Creator.search().query(query).execute()
+
+        if response.hits.total.value > 0:
+            raise Exception("Creator already exists.")
+
         instance = Creator(username=username, email=email)
         instance.save()
-        return CreatorSchema(username=instance.username, email=instance.email)
+
+        return CreatorSchema(
+            username=instance.username,
+            email=instance.email,
+            signed_up=instance.signed_up,
+            assets=instance.assets,
+        )
 
     @strawberry.mutation
     async def add_asset_to_creator(self, type: str, email: str) -> AssetSchema:
@@ -42,10 +56,6 @@ class Mutation:
         mutation {
             addAssetToCreator(type: "New Fancy Platform", email: "cool@email.com") {
                 type
-                creator {
-                    username
-                    email
-                }
             }
         }
         ```
@@ -57,14 +67,15 @@ class Mutation:
         Returns:
             AssetSchema: Data about the creator and related assets.
         """
+        response = Creator.search().query("match", email=email).execute()
 
-        query = Search(index="creator").query("match", email=email)
-        response = query.execute()
+        creator = Creator.get(id=response[0].meta.id)
+        if not creator:
+            raise Exception("Creator does not exist.")
 
-        if creator := Creator.get(id=response[0].meta.id):
-            creator.add_asset(type=type)
+        creator.add_asset(type=type)
 
-        return AssetSchema(type=type, creator=creator)
+        return AssetSchema(type=type)
 
     @strawberry.mutation
     async def delete_creator(self, email: str) -> CreatorSchema:
@@ -75,6 +86,7 @@ class Mutation:
             deleteCreator(email: "cool@email.com") {
                 username
                 email
+                signedUp
                 assets {
                     type
                 }
@@ -88,11 +100,17 @@ class Mutation:
         Returns:
             CreatorSchema: Data about the creator that has just been deleted.
         """
+        response = Creator.search().query("match", email=email).execute()
 
-        query = Search(index="creator").query("match", email=email)
-        response = query.execute()
+        creator = Creator.get(id=response[0].meta.id)
+        if not creator:
+            raise Exception("Creator does not exist.")
 
-        if creator := Creator.get(id=response[0].meta.id):
-            creator.delete()
+        creator.delete()
 
-        return CreatorSchema(username=response[0].username, email=response[0].email)
+        return CreatorSchema(
+            username=creator.username,
+            email=creator.email,
+            signed_up=creator.signed_up,
+            assets=creator.assets,
+        )
