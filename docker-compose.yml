@@ -29,8 +29,6 @@ services:
   web:
     build: .
     env_file: .env
-    volumes:
-      - .:/code
     depends_on:
       - elasticsearch
       - kibana
