@@ -14,14 +14,11 @@ jobs:
       - name: Build and run containers
         run: docker-compose up -d
 
+      - name: Ruff
+        run: docker-compose exec -T web ruff check .
+
       - name: Black
-        run: docker-compose exec -T web black . --check
-
-      - name: isort
-        run: docker-compose exec -T web isort . --check-only
-
-      - name: Flake8
-        run: docker-compose exec -T web flake8 .
+        run: docker-compose exec -T web black --check .
 
       - name: Pytest
-        run: docker-compose exec -T web pytest .
+        run: docker-compose exec -T web pytest -n auto .

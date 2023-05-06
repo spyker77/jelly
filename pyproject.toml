@@ -12,6 +12,11 @@ plugins = ["strawberry.ext.mypy_plugin"]
 line-length = 119
 target-version = "py311"
 
+[tool.flake8]
+max-line-length = 119
+max-complexity = 10
+extend-ignore = ["E203", "W605"]
+
 [tool.coverage]
 [tool.coverage.run]
 omit = ["tests/*", "*conftest.py"]
@@ -30,25 +35,26 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "3.11.*"
-fastapi = "0.93.0"
+fastapi = "0.95.1"
 gunicorn = "20.1.0"
-uvicorn = { extras = ["standard"], version = "0.20.0" }
-strawberry-graphql = { extras = ["fastapi"], version = "0.159.1" }
+uvicorn = { extras = ["standard"], version = "0.22.0" }
+strawberry-graphql = { extras = ["fastapi"], version = "0.176.3" }
 elasticsearch-dsl = "7.4.1"
-aiohttp = "3.8.4"
-httpx = "0.23.3"
+# aiohttp = "3.8.4"
 
 [tool.poetry.group.dev.dependencies]
-black = "23.1.0"
+black = "23.3.0"
 isort = "5.12.0"
 flake8 = "6.0.0"
+flake8-pyproject = "1.2.3"
 mypy = "1.1.1"
 ruff = "0.0.254"
-pre-commit = "3.1.1"
-pytest = "7.2.2"
-pytest-asyncio = "0.20.3"
+pre-commit = "3.3.1"
+pytest = "7.3.1"
+pytest-asyncio = "0.21.0"
 pytest-cov = "4.0.0"
-pytest-xdist = {extras = ["psutil"], version = "3.2.0"}
+pytest-xdist = {extras = ["psutil"], version = "3.2.1"}
+httpx = "0.24.0"
 
 [build-system]
 requires = ["poetry-core"]
