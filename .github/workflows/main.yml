@@ -21,4 +21,4 @@ jobs:
         run: docker-compose exec -T web black --check .
 
       - name: Pytest
-        run: docker-compose exec -T web pytest -n auto .
+        run: docker-compose exec -T web pytest .
