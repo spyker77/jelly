@@ -8,18 +8,8 @@ settings = get_settings()
 
 logger = logging.getLogger("gunicorn.error")
 
-
 client = AsyncIOMotorClient(settings.mongodb_url)
 
 
-# async def get_db() -> AsyncIOMotorDatabase:
-#     db = client[settings.mongodb_database]
-#     try:
-#         yield db
-#     finally:
-#         client.close()
-
-
 async def get_db() -> AsyncIOMotorDatabase:
-    db = client[settings.mongodb_database]
-    return db
+    return client[settings.mongodb_database]
