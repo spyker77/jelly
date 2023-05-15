@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: spyker77/jelly
+          envFrom:
+            - secretRef:
+                name: web
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /graphql
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 1
+          readinessProbe:
+            httpGet:
+              path: /graphql
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 1
