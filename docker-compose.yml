@@ -34,8 +34,6 @@ services:
     image: kibana:8.6.2
     restart: unless-stopped
     env_file: .env
-    volumes:
-      - kibana_data:/usr/share/kibana/data
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -61,6 +59,4 @@ volumes:
   mongo_data:
     driver: local
   elasticsearch_data:
-    driver: local
-  kibana_data:
     driver: local
