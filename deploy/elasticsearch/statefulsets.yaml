@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: elasticsearch
 spec:
-  replicas: 1
+  serviceName: elasticsearch
+  replicas: 3
   selector:
     matchLabels:
       app: elasticsearch
@@ -15,13 +16,10 @@ spec:
       containers:
         - name: elasticsearch
           image: elasticsearch:8.6.2
-          env:
-            - name: ES_JAVA_OPTS
-              value: "-Xms512m -Xmx512m"
-            - name: discovery.type
-              value: "single-node"
-            - name: xpack.security.enabled
-              value: "false"
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: elasticsearch
           ports:
             - containerPort: 9200
           resources:
@@ -34,7 +32,11 @@ spec:
           volumeMounts:
             - name: elasticsearch-storage
               mountPath: /usr/share/elasticsearch/data
-      volumes:
-        - name: elasticsearch-storage
-          persistentVolumeClaim:
-            claimName: elasticsearch
+  volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
