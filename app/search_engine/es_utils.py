@@ -29,7 +29,8 @@ async def es_create_index(index_name: str):
         index_name (str): The name of the index to create.
     """
     async for es in get_es():
-        await es.indices.create(index=index_name)
+        if not await es.indices.exists(index=index_name):
+            await es.indices.create(index=index_name)
 
 
 async def es_index_document(index_name: str, doc_id: str, doc):
