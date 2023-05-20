@@ -1,20 +1,20 @@
 version: "3.8"
 
 services:
-  mongo:
+  mongo_tests:
     image: mongo:6.0.5
     restart: unless-stopped
     volumes:
-      - mongo_data:/data/db
+      - mongo_tests_data:/data/db
     ports:
       - "27017:27017"
 
-  elasticsearch:
+  elasticsearch_tests:
     image: elasticsearch:8.6.2
     restart: unless-stopped
-    env_file: .env
+    env_file: .env.tests
     volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_tests_data:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
     healthcheck:
@@ -30,33 +30,33 @@ services:
       timeout: 5s
       retries: 5
 
-  kibana:
+  kibana_tests:
     image: kibana:8.6.2
     restart: unless-stopped
-    env_file: .env
+    env_file: .env.tests
     depends_on:
-      elasticsearch:
+      elasticsearch_tests:
         condition: service_healthy
     ports:
       - "5601:5601"
 
-  web:
+  web_tests:
     build: .
-    env_file: .env
+    env_file: .env.tests
     volumes:
       - .:/home/app/web
     depends_on:
-      mongo:
+      mongo_tests:
         condition: service_started
-      elasticsearch:
+      elasticsearch_tests:
         condition: service_healthy
-      kibana:
+      kibana_tests:
         condition: service_started
     ports:
       - "8000:8000"
 
 volumes:
-  mongo_data:
+  mongo_tests_data:
     driver: local
-  elasticsearch_data:
+  elasticsearch_tests_data:
     driver: local
