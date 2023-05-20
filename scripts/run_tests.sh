@@ -12,4 +12,4 @@ echo "Build imeages..."
 docker-compose -f "$COMPOSE_FILE" build --pull
 
 echo "Run tests..."
-docker-compose -f "$COMPOSE_FILE" run --rm web_tests pytest --cov
+docker-compose -f "$COMPOSE_FILE" run --rm web_tests pytest
