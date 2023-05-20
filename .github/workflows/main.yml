@@ -20,5 +20,10 @@ jobs:
       - name: Black
         run: docker-compose exec -T web black --check .
 
+      - name: Stop containers
+        run: docker-compose down
+
       - name: Pytest
-        run: ./scripts/run_tests.sh
+        run: |
+          chmod +x ./scripts/run_tests.sh
+          ./scripts/run_tests.sh
