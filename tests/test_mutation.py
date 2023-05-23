@@ -1,13 +1,14 @@
-import pytest
+from unittest.mock import AsyncMock, patch
 
-from .conftest import add_test_creator
+import pytest
 
 pytestmark = pytest.mark.asyncio
 
 
-async def test_graphql_mutation_add_creator(test_creator_data, test_client):
-    test_email = test_creator_data["email"]
-    test_username = test_creator_data["username"]
+@patch("app.worker.create_pool", new_callable=AsyncMock)
+async def test_graphql_mutation_add_creator(mocked_create_pool, faker, test_client):
+    test_email = faker.email()
+    test_username = faker.user_name()
     add_creator = f"""
     mutation {{
         addCreator(username: "{test_username}", email: "{test_email}") {{
@@ -26,7 +27,8 @@ async def test_graphql_mutation_add_creator(test_creator_data, test_client):
         assert response.json()["data"]["addCreator"]["email"] == test_email
 
 
-async def test_graphql_mutation_add_existing_creator(test_creator_data, test_client):
+async def test_graphql_mutation_add_existing_creator(add_test_creator, test_creator_data, test_client):
+    await add_test_creator
     test_email = test_creator_data["email"]
     test_username = test_creator_data["username"]
     add_creator = f"""
@@ -41,15 +43,14 @@ async def test_graphql_mutation_add_existing_creator(test_creator_data, test_cli
     }}
     """
     async for client in test_client:
-        await add_test_creator(test_creator_data, client)
-
         response = await client.post("/graphql", json={"query": add_creator})
         assert response.status_code == 200
         assert "errors" in response.json()
         assert response.json()["errors"][0]["message"] == "Creator already exists."
 
 
-async def test_graphql_mutation_add_asset_to_creator(test_creator_data, test_client):
+async def test_graphql_mutation_add_asset_to_creator(add_test_creator, test_creator_data, test_client):
+    await add_test_creator
     test_email = test_creator_data["email"]
     test_type = "Test Type"
     add_asset_to_creator = f"""
@@ -61,8 +62,6 @@ async def test_graphql_mutation_add_asset_to_creator(test_creator_data, test_cli
     }}
     """
     async for client in test_client:
-        await add_test_creator(test_creator_data, client)
-
         response = await client.post("/graphql", json={"query": add_asset_to_creator})
         assert response.status_code == 200
         assert "errors" not in response.json()
@@ -87,12 +86,11 @@ async def test_graphql_mutation_add_asset_to_non_existing_creator(test_client):
         assert response.json()["errors"][0]["message"] == "Creator does not exist."
 
 
-async def test_graphql_mutation_remove_asset_from_creator(test_creator_data, test_client):
+async def test_graphql_mutation_remove_asset_from_creator(add_test_creator, test_creator_data, test_client):
+    await add_test_creator
     test_email = test_creator_data["email"]
     test_type = "Test Type"
     async for client in test_client:
-        await add_test_creator(test_creator_data, client)
-
         add_asset_to_creator = f"""
         mutation {{
             addAssetToCreator(type: "{test_type}", email: "{test_email}") {{
@@ -137,7 +135,12 @@ async def test_graphql_mutation_remove_asset_from_non_existing_creator(test_clie
         assert response.json()["errors"][0]["message"] == "Creator does not exist."
 
 
-async def test_graphql_mutation_remove_non_existing_asset_from_creator(test_creator_data, test_client):
+async def test_graphql_mutation_remove_non_existing_asset_from_creator(
+    add_test_creator,
+    test_creator_data,
+    test_client,
+):
+    await add_test_creator
     test_email = test_creator_data["email"]
     test_type = "No Such Type"
     remove_asset_from_creator = f"""
@@ -149,15 +152,14 @@ async def test_graphql_mutation_remove_non_existing_asset_from_creator(test_crea
     }}
     """
     async for client in test_client:
-        await add_test_creator(test_creator_data, client)
-
         response = await client.post("/graphql", json={"query": remove_asset_from_creator})
         assert response.status_code == 200
         assert "errors" in response.json()
         assert response.json()["errors"][0]["message"] == "Asset does not exist."
 
 
-async def test_graphql_mutation_delete_creator(test_creator_data, test_client):
+async def test_graphql_mutation_delete_creator(add_test_creator, test_creator_data, test_client):
+    await add_test_creator
     test_email = test_creator_data["email"]
     delete_creator = f"""
     mutation {{
@@ -167,8 +169,6 @@ async def test_graphql_mutation_delete_creator(test_creator_data, test_client):
     }}
     """
     async for client in test_client:
-        await add_test_creator(test_creator_data, client)
-
         response = await client.post("/graphql", json={"query": delete_creator})
         assert response.status_code == 200
         assert "errors" not in response.json()

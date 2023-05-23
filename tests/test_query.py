@@ -1,11 +1,10 @@
 import pytest
 
-from .conftest import add_test_creator
-
 pytestmark = pytest.mark.asyncio
 
 
-async def test_graphql_query_get_creator(test_creator_data, test_client):
+async def test_graphql_query_get_creator(add_test_creator, test_creator_data, test_client):
+    await add_test_creator
     test_email = test_creator_data["email"]
     get_creator = f"""
         {{
@@ -19,20 +18,17 @@ async def test_graphql_query_get_creator(test_creator_data, test_client):
         }}
     """
     async for client in test_client:
-        await add_test_creator(test_creator_data, client)
-
         response = await client.post("/graphql", json={"query": get_creator})
         assert response.status_code == 200
         assert "errors" not in response.json()
         assert response.json()["data"]["getCreator"]["email"] == test_email
 
 
-async def test_graphql_query_get_creator_assets(test_creator_data, test_client):
+async def test_graphql_query_get_creator_assets(add_test_creator, test_creator_data, test_client):
+    await add_test_creator
     test_email = test_creator_data["email"]
     test_type = "Test Type"
     async for client in test_client:
-        await add_test_creator(test_creator_data, client)
-
         add_asset_to_creator = f"""
         mutation {{
             addAssetToCreator(type: "{test_type}", email: "{test_email}") {{
@@ -81,7 +77,8 @@ async def test_graphql_query_get_non_existing_creator(test_client):
         assert response.json()["errors"][0]["message"] == "Creator does not exist."
 
 
-async def test_graphql_query_search_creators(test_creator_data, test_client):
+async def test_graphql_query_search_creators(add_test_creator, test_creator_data, test_client):
+    await add_test_creator
     test_email = test_creator_data["email"]
     search_creators = f"""
     {{
@@ -95,8 +92,6 @@ async def test_graphql_query_search_creators(test_creator_data, test_client):
     }}
     """
     async for client in test_client:
-        await add_test_creator(test_creator_data, client)
-
         response = await client.post("/graphql", json={"query": search_creators})
         assert response.status_code == 200
         assert "errors" not in response.json()
@@ -112,12 +107,14 @@ async def test_graphql_query_search_creators(test_creator_data, test_client):
     ],
 )
 async def test_graphql_query_search_creators_with_page_errors(
+    add_test_creator,
     test_creator_data,
     test_client,
     page,
     per_page,
     expected_error,
 ):
+    await add_test_creator
     test_email = test_creator_data["email"]
     search_creators = f"""
     {{
@@ -131,8 +128,6 @@ async def test_graphql_query_search_creators_with_page_errors(
     }}
     """
     async for client in test_client:
-        await add_test_creator(test_creator_data, client)
-
         response = await client.post("/graphql", json={"query": search_creators})
         assert response.status_code == 200
         assert "errors" in response.json()
