@@ -1,9 +1,18 @@
 version: "3.8"
 
 services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
   mongo:
     image: mongo:6.0.5
     restart: unless-stopped
+    env_file: .env
+    command: ["--auth"]
     volumes:
       - mongo_data:/data/db
     ports:
@@ -28,7 +37,7 @@ services:
         ]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   kibana:
     image: kibana:8.6.2
@@ -43,6 +52,17 @@ services:
   web:
     build: .
     env_file: .env
+    command:
+      [
+        "gunicorn",
+        "-b",
+        "0.0.0.0",
+        "-w",
+        "4",
+        "-k",
+        "uvicorn.workers.UvicornWorker",
+        "app.main:app"
+      ]
     volumes:
       - .:/home/app/web
     depends_on:
@@ -55,7 +75,23 @@ services:
     ports:
       - "8000:8000"
 
+  worker:
+    build: .
+    env_file: .env
+    command: [ "python", "-m", "app.worker" ]
+    volumes:
+      - .:/home/app/web
+    depends_on:
+      redis:
+        condition: service_started
+      mongo:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
+
 volumes:
+  redis_data:
+    driver: local
   mongo_data:
     driver: local
   elasticsearch_data:

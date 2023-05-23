@@ -45,7 +45,7 @@ class Mutation:
             raise GraphQLError(message="Creator already exists.")
 
         new_creator = CreatorModel(username=username, email=email).dict(by_alias=True)
-        result = await create_creator(db, new_creator, info.context["background_tasks"])
+        result = await create_creator(db, new_creator)
 
         return CreatorSchema(**result)
 
@@ -80,7 +80,7 @@ class Mutation:
         creator_assets = creator.get("assets", [])
         creator_assets.append(new_asset)
 
-        await update_creator_assets(db, email, creator_assets, info.context["background_tasks"])
+        await update_creator_assets(db, email, creator_assets)
 
         return AssetSchema(**new_asset)
 
@@ -122,7 +122,7 @@ class Mutation:
         if asset_to_remove is None:
             raise GraphQLError(message="Asset does not exist.")
 
-        await update_creator_assets(db, email, creator_assets, info.context["background_tasks"])
+        await update_creator_assets(db, email, creator_assets)
 
         return AssetSchema(**asset_to_remove)
 
@@ -157,6 +157,6 @@ class Mutation:
         if not creator:
             raise GraphQLError(message="Creator does not exist.")
 
-        deleted_creator = await delete_creator_by_email(db, email, info.context["background_tasks"])
+        deleted_creator = await delete_creator_by_email(db, email)
 
         return CreatorSchema(**deleted_creator)

@@ -27,7 +27,7 @@ python_files = ["tests.py", "test_*.py", "*_tests.py"]
 
 [tool.poetry]
 name = "jelly"
-version = "0.1.0"
+version = "0.2.0"
 description = "A playground for FastAPI, GraphQL and Elasticsearch"
 license = "MIT"
 authors = ["Evgeni Sautin <evgeni.sautin@gmail.com>"]
@@ -42,6 +42,8 @@ strawberry-graphql = { extras = ["fastapi"], version = "0.176.3" }
 elasticsearch = {extras = ["async"], version = "8.7.0"}
 motor = "3.1.2"
 pydantic = {extras = ["dotenv", "email"], version = "1.10.7"}
+arq = "0.25.0"
+tenacity = "8.2.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "23.3.0"

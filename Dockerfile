@@ -56,6 +56,3 @@ COPY --chown=app:app . .
 
 # Change to the app user
 USER app
-
-# Run the server
-CMD ["gunicorn", "-b", "0.0.0.0", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "app.main:app"]

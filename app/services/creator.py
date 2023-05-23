@@ -1,16 +1,11 @@
 from typing import Any
 
 from bson import ObjectId
-from fastapi import BackgroundTasks
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from ..search_engine.es_utils import (
-    es_create_index,
-    es_delete_document,
-    es_index_document,
-    es_search,
-    es_update_document,
-)
+from ..search_engine.elasticsearch import get_es
+from ..search_engine.manager import ElasticsearchManager
+from ..worker import get_redis
 
 
 async def get_creator_by_email(db: AsyncIOMotorDatabase, email: str) -> dict[str, Any] | None:
@@ -27,11 +22,7 @@ async def get_creator_by_email(db: AsyncIOMotorDatabase, email: str) -> dict[str
     return await db["creators"].find_one({"email": email})
 
 
-async def create_creator(
-    db: AsyncIOMotorDatabase,
-    creator: dict,
-    background_tasks: BackgroundTasks,
-) -> dict[str, Any]:
+async def create_creator(db: AsyncIOMotorDatabase, creator: dict) -> dict[str, Any]:
     """
     Create a new creator in the database and index them in Elasticsearch.
 
@@ -45,18 +36,14 @@ async def create_creator(
     """
     await db["creators"].insert_one(creator)
 
-    background_tasks.add_task(es_create_index, "creator")
-    background_tasks.add_task(es_index_document, "creator", str(creator["_id"]), creator)
+    redis = await get_redis()
+    await redis.enqueue_job("es_create_index", "creator")
+    await redis.enqueue_job("es_index_document", "creator", str(creator["_id"]), creator)
 
     return creator
 
 
-async def update_creator_assets(
-    db: AsyncIOMotorDatabase,
-    email: str,
-    assets: list,
-    background_tasks: BackgroundTasks,
-) -> None:
+async def update_creator_assets(db: AsyncIOMotorDatabase, email: str, assets: list) -> None:
     """
     Update a creator's assets in the database and Elasticsearch.
 
@@ -72,14 +59,12 @@ async def update_creator_assets(
     await db["creators"].update_one({"email": email}, {"$set": {"assets": assets}})
 
     creator = await get_creator_by_email(db, email)
-    background_tasks.add_task(es_update_document, "creator", str(creator["_id"]), {"assets": assets})
+
+    redis = await get_redis()
+    await redis.enqueue_job("es_update_document", "creator", str(creator["_id"]), {"assets": assets})
 
 
-async def delete_creator_by_email(
-    db: AsyncIOMotorDatabase,
-    email: str,
-    background_tasks: BackgroundTasks,
-) -> dict[str, Any]:
+async def delete_creator_by_email(db: AsyncIOMotorDatabase, email: str) -> dict[str, Any]:
     """
     Delete a creator from the database by their email and remove their index from Elasticsearch.
 
@@ -94,7 +79,9 @@ async def delete_creator_by_email(
     creator = await get_creator_by_email(db, email)
     await db["creators"].delete_one({"email": email})
 
-    background_tasks.add_task(es_delete_document, "creator", str(creator["_id"]))
+    redis = await get_redis()
+    await redis.enqueue_job("es_delete_document", "creator", str(creator["_id"]))
+
     return creator
 
 
@@ -119,7 +106,9 @@ async def search_creators(
     Returns:
         list[dict[str, Any]]: A list of dictionaries containing creator data that matches the search text.
     """
-    response = await es_search("creator", search_text, page, per_page)
+    es = await get_es()
+    response = await ElasticsearchManager(es).search("creator", search_text, page, per_page)
+
     creator_ids = [hit["_id"] for hit in response["hits"]["hits"]]
     creators = (
         await db["creators"].find({"_id": {"$in": [ObjectId(creator_id) for creator_id in creator_ids]}}).to_list(None)

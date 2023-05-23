@@ -3,9 +3,10 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import get_settings
-from .database.mongodb import client
+from .database.mongodb import close_db, get_db
 from .routers import graphql
+from .search_engine.elasticsearch import close_es, get_es
+from .settings import get_settings
 
 settings = get_settings()
 
@@ -16,7 +17,7 @@ def create_application() -> FastAPI:
     application = FastAPI(
         title="Jelly",
         description="""A playground for FastAPI, GraphQL and Elasticsearch""",
-        version="0.1.0",
+        version="0.2.0",
     )
     application.add_middleware(
         CORSMiddleware,
@@ -35,9 +36,12 @@ app = create_application()
 @app.on_event("startup")
 async def startup_event() -> None:
     logger.info("Starting up...")
+    await get_db()
+    await get_es()
 
 
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
     logger.info("Shutting down...")
-    client.close()
+    await close_db()
+    await close_es()
