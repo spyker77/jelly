@@ -9,7 +9,7 @@ COMPOSE_FILE=docker-compose.tests.yml
 trap 'echo "Clean up..."; docker-compose -f "$COMPOSE_FILE" down -v && docker image prune -f' EXIT SIGINT SIGTERM
 
 echo "Build imeages..."
-docker-compose -f "$COMPOSE_FILE" build --pull
+docker-compose -f "$COMPOSE_FILE" build
 
 echo "Run tests..."
 docker-compose -f "$COMPOSE_FILE" run --rm web_tests pytest "$@"
