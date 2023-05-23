@@ -13,3 +13,9 @@ docker compose up -d --build
 Open in your browser to see the GraphiQL: <http://localhost:8000/graphql>
 
 To see the Kibana: <http://localhost:5601>
+
+To run tests:
+
+```bash
+./scripts/run_tests.sh
+```
