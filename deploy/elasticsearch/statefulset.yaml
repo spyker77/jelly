@@ -25,11 +25,11 @@ spec:
             - containerPort: 9200
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "500m"
-            limits:
               memory: "1Gi"
-              cpu: "1"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
           volumeMounts:
             - name: elasticsearch-storage
               mountPath: /usr/share/elasticsearch/data
