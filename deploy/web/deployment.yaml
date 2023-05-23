@@ -24,9 +24,20 @@ spec:
       containers:
         - name: web
           image: spyker77/jelly
+          command:
+            [
+              "gunicorn",
+              "-b",
+              "0.0.0.0",
+              "-w",
+              "4",
+              "-k",
+              "uvicorn.workers.UvicornWorker",
+              "app.main:app",
+            ]
           envFrom:
             - secretRef:
-                name: web
+                name: app
           ports:
             - containerPort: 8000
           resources:
