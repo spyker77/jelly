@@ -2,6 +2,8 @@
 
 ![Continuous Integration](https://github.com/spyker77/jelly/workflows/Continuous%20Integration/badge.svg?branch=main)
 
+The project is 80-90% built using AI tools as an experiment to see how this new way of solving software engineering problems can be incorporated into a traditional workflow, how it will impact developer productivity, and what this could mean for the future of programming.
+
 ## Quick Start
 
 Spin up the containers:
